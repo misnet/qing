@@ -1,0 +1,15 @@
+{
+    "name":"kuga/qing-common",
+    "description":"kuga-api-framework网关系统需要的公用组件类",
+    "type":"library",
+    "license": "LGPL-3.0",
+    "require":{
+        "php":">=5.6"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "Qing\\": "src/Qing"
+        }
+    }
+}
