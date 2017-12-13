@@ -9,7 +9,7 @@
 
     "autoload": {
         "psr-4": {
-            "Qing\\": "src"
+            "Qing\\Lib\\": "src"
         }
     }
 }
