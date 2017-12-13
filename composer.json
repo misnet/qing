@@ -1,5 +1,5 @@
 {
-    "name":"kuga/qing-common",
+    "name":"kuga/qing",
     "description":"kuga-api-framework网关系统需要的公用组件类",
     "type":"library",
     "license": "LGPL-3.0",
