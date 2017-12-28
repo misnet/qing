@@ -43,10 +43,10 @@ class Redis extends QueueAbstract {
 	public function __construct($option = array()) {
 		$this->_options = $this->_filterOption ( $option );
 		$this->_redisServer = new RedisServer ( $this->_options ['host'], $this->_options ['port'] );
-		if ($this->_options ['password']) {
-			$this->_redisServer->Auth ( $this->_options ['password'] );
+		if ($this->_options ['auth']) {
+			$this->_redisServer->Auth ( $this->_options ['auth'] );
 		}
-		$this->_redisServer->Select ( $this->_options ['db'] );
+		$this->_redisServer->Select ( $this->_options ['index'] );
 	}
 	/**
 	 * 选项设置默认值
@@ -61,16 +61,16 @@ class Redis extends QueueAbstract {
 			$option = array ();
 		}
 		$defaultOption ['host'] = '127.0.0.1';
-		$defaultOption ['password'] = '';
+		$defaultOption ['auth'] = '';
 		$defaultOption ['port'] = 6379;
 		$defaultOption ['name'] = 'default';
-		$defaultOption ['db'] = 0;
+		$defaultOption ['index'] = 0;
 		$option = \Qing\Lib\Utils::arrayExtend ( $defaultOption, $option );
-		if (! is_integer ( $option ['db'] )) {
-			$option ['db'] = intval ( $option ['db'] );
+		if (! is_integer ( $option ['index'] )) {
+			$option ['index'] = intval ( $option ['index'] );
 		}
-		if ($option ['db'] < self::DB_MIN_INDEX || $option ['db'] > self::DB_MAX_INDEX) {
-			throw new QueueException ( '指定的Redis数据库【' . $option ['db'] . '】不存在' );
+		if ($option ['index'] < self::DB_MIN_INDEX || $option ['index'] > self::DB_MAX_INDEX) {
+			throw new QueueException ( '指定的Redis数据库【' . $option ['index'] . '】不存在' );
 		}
 		return $option;
 	}

@@ -65,13 +65,14 @@ class Gettext extends Adapter
     {
         $container['args'] = func_get_args();
         $container['locale'] = $this->_locale;
-        $cacheId   = $container['locale'].':'.md5(serialize($container));
+        $j = '_';
+        $cacheId   = $container['locale'].$j.md5(serialize($container));
         if($this->_cacheEngine){
             $cacheData = $this->_cacheEngine->get($cacheId);
             if($cacheData){
                 return $cacheData;
             }
-        }   
+        }
         if (! $domain) {
             if(!is_array($this->_directory))
                 $translation = gettext($index);
@@ -79,6 +80,7 @@ class Gettext extends Adapter
                 $isFounded = false;
                 foreach($this->_directory as $d=>$dir){
                     if($this->exists($index,$d)){
+
                         $translation = dgettext($d, $index);
                         $isFounded   = true;
                         if(!$this->_override){
@@ -95,7 +97,7 @@ class Gettext extends Adapter
         }
         $data = $this->replacePlaceholders($translation, $placeholders);
         if($this->_cacheEngine){
-            $cacheData = $this->_cacheEngine->set($cacheId,$data);
+            $cacheData = $this->_cacheEngine->set($cacheId,$data,600);
         }
         return $data;
     }
@@ -135,7 +137,7 @@ class Gettext extends Adapter
      *            array placeholders
      * @param
      *            string domain
-     *            
+     *
      * @return string
      */
     public function nquery($msgid1, $msgid2, $count, $placeholders = null, $domain = null)
@@ -143,20 +145,21 @@ class Gettext extends Adapter
         $container['args'] = func_get_args();
         $container['locale'] = $this->_locale;
         //$cacheId   = md5(serialize($container));
-        $cacheId   = $container['locale'].':'.md5(serialize($container));
+        $j = PHP_OS=='Linux'?':':'-';
+        $cacheId   = $container['locale'].$j.md5(serialize($container));
         if($this->_cacheEngine){
             $cacheData = $this->_cacheEngine->get($cacheId);
             if($cacheData){
                 return $cacheData;
             }
-        }   
+        }
         if (! $domain) {
             if(!is_array($this->_directory))
                 $translation = ngettext($msgid1, $msgid2, $count);
             else{
                 $isFounded = false;
                 foreach($this->_directory as $domain=>$dir){
-                    if($this->exists($msgid1,null,$domain)){
+                    if($this->exists($msgid1,$domain)){
                         $translation = dngettext($domain, $msgid1, $msgid2, $count);
                         $isFounded   = true;
                         if(!$this->_override)
@@ -184,17 +187,19 @@ class Gettext extends Adapter
      *
      * @param
      *            string domain
-     *            
+     *
      * @return string Returns the new current domain.
      * @throws \InvalidArgumentException
      */
     public function setDomain($domain)
     {
-        /*
-         * if domain != this->_defaultDomain || !in_array(domain, this->_domains) {
-         * throw new \InvalidArgumentException(domain . " is invalid translation domain");
-         * }
-         */
+        //        if($this->_cacheEngine){
+        //            $key = $this->_cacheEngine->get('lang-'.md5($domain).date('YmdHi'));
+        //            if(!$key){
+        //                $this->_cacheEngine->set('lang-'.md5($domain),$domain,80);
+        //                $domain = $key;
+        //            }
+        //        }
         return textdomain($domain);
     }
 
@@ -232,20 +237,36 @@ class Gettext extends Adapter
     public function setDirectory($directory)
     {
         $this->_directory = $directory;
-        
         if (is_array($this->_directory) && sizeof($this->_directory) > 0) {
             foreach ($this->_directory as $key => $value) {
-                bindtextdomain($key, $value);
+                //gettext出现了缓存问题，需要借助缓存系统生成动态的domain
+                $domain =  $key;
+                $cacheKey    = 'lang-'.md5($domain).date('YmdHi');
+                $path = realpath($value);
+                //                if($this->_cacheEngine){
+                //                    $target = $this->_cacheEngine->get($cacheKey);
+                //                    if(!$target){
+                //                        $target = QING_TMP_PATH.'/'.$cacheKey.'/'.$this->_locale.'/'.$domain.'.mo';
+                //                        //mkdir(QING_TMP_PATH.'/'.$cacheKey,0777,true);
+                //                        //copy($path.DIRECTORY_SEPARATOR.$this->_locale.DIRECTORY_SEPARATOR.$domain.'.mo',$target);
+                //                        //$this->_cacheEngine->set($cacheKey,$target,80);
+                //                        //$domain = $key;
+                //                    }
+                //                    //$path = $target;
+                //                }
+                bindtextdomain($domain, $path);
+                textdomain($domain);
             }
         } else {
             bindtextdomain($this->getDefaultDomain(), $this->_directory);
+            textdomain($this->getDefaultDomain());
         }
     }
 
     /**
      * Gets the path for a domain
      */
-    public function getDirectory($directory)
+    public function getDirectory()
     {
         return $this->_directory;
     }
@@ -255,13 +276,18 @@ class Gettext extends Adapter
      */
     public function setLocale($category, $locale,$charset='')
     {
-        $this->_locale = call_user_func_array("setlocale", func_get_args());
+        call_user_func_array("setlocale", func_get_args());
+        $this->_locale = $locale.($charset?('.'.$charset):'');
         $this->_category = $category;
-        
         // Windowns
-        putenv("LC_ALL=" . $this->_locale.$charset);
+        putenv("LC_ALL=" . $locale.$charset);
+        putenv("LC_ALL=" . $locale.$charset);
+        putenv("LC_MESSAGES=$locale");
+        setlocale(LC_MESSAGES, $locale);
+        putenv("LANGUAGE=$locale");
+        putenv("LANG=$locale");
         // Linux
-        setlocale(LC_ALL, $this->_locale.$charset);
+        setlocale(LC_ALL, $locale.$charset);
         return $this->_locale;
     }
 
@@ -292,17 +318,17 @@ class Gettext extends Adapter
         if (! isset($options["locale"])) {
             throw new Exception("Parameter \"locale\" is required");
         }
-        
+
         if (! isset($options["directory"])) {
             throw new Exception("Parameter \"directory\" is required");
         }
-        
+        $this->setCacheEngine($options['cache']);
         $options = array_merge($this->getOptionsDefault(), $options);
         $this->setOverride($options['override']);
         $this->setLocale($options["category"], $options["locale"]);
         $this->setDefaultDomain($options["defaultDomain"]);
         $this->setDirectory($options["directory"]);
         $this->setDomain($options["defaultDomain"]);
-        $this->setCacheEngine($options['cache']);
+
     }
 }

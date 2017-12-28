@@ -13,8 +13,8 @@ class SimpleStorage {
 	public function __construct($config) {
 		$this->_options ['host'] = '127.0.0.1';
 		$this->_options ['port'] = 6391;
-		$this->_options ['password'] = '';
-		$this->_options ['db'] = 0;
+		$this->_options ['auth'] = '';
+		$this->_options ['index'] = 0;
 		$this->_filterOption ( $config );
         $this->_redisServer = new RedisServer ( $this->_options ['host'], $this->_options ['port'] );
 
@@ -31,10 +31,10 @@ class SimpleStorage {
 
         //$this->_redisServer = new \Redis();
         $this->_redisServer->connect($this->_options ['host'], $this->_options ['port']);
-		if ($this->_options ['password']) {
-			$this->_redisServer->Auth ( $this->_options ['password'] );
+		if ($this->_options ['auth']) {
+			$this->_redisServer->Auth ( $this->_options ['auth'] );
 		}
-		$this->_redisServer->Select ( $this->_options ['db'] );
+		$this->_redisServer->Select ( $this->_options ['index'] );
         //$this->_redisServer->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP);
     }
 
