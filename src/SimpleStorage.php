@@ -56,6 +56,19 @@ class SimpleStorage {
 	public function delete($key) {
 		return $this->_redisServer->Del ( $key );
 	}
+
+    /**
+     * 修改List中指定的值
+     * @param $key
+     * @param $index
+     * @param $value
+     *
+     * @return array|bool|int|null|string|void
+     */
+	public function updateListAt($key,$index,$value){
+        $value = $this->_serialize ( $value );
+        return $this->_redisServer->LSet($key,$index,$value);
+    }
 	public function deleteFromList($key, $value, $count = 0) {
 		$this->_redisServer->LRem ( $key, $count, $value );
 	}
