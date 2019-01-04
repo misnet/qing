@@ -11,7 +11,7 @@ abstract class ControllerAbstract extends \Phalcon\Mvc\Controller{
 	protected function setJsonResponse($data){
         $this->response->setHeader('Content-Type', 'application/json; charset=utf8');
 		//$data = \Zend\Json\Encoder::encode($data,true);
-        $data = json_encode($data);
+        $data = json_encode($data,JSON_NUMERIC_CHECK);
         //$data = json_encode($data);
         $this->sendContent($data);
         exit;
