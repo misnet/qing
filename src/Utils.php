@@ -157,10 +157,19 @@ class Utils{
 	 */
 	static public function objectToArray($obj){
 		$return = null;
-		if (is_object ( $obj )||is_array($obj)){
-			while(list($k,$v) = each($obj)){
-				$return[$k]=self::objectToArray($v);
-			}
+        if(empty($obj)){
+            if (is_object ( $obj )||is_array($obj)){
+                $return = [];
+            }else{
+                $return = $obj;
+            }
+        }elseif (is_object ( $obj )||is_array($obj)){
+            foreach($obj as $k=>$v){
+                $return[$k]=self::objectToArray($v);
+            }
+//			while(list($k,$v) = each($obj)){
+//				$return[$k]=self::objectToArray($v);
+//			}
 		}else{
 			$return = $obj;
 		}
