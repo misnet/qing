@@ -80,7 +80,6 @@ class Gettext extends Adapter
                 $isFounded = false;
                 foreach($this->_directory as $d=>$dir){
                     if($this->exists($index,$d)){
-
                         $translation = dgettext($d, $index);
                         $isFounded   = true;
                         if(!$this->_override){
@@ -264,6 +263,17 @@ class Gettext extends Adapter
     }
 
     /**
+     * 增加解析目录
+     * @param $directoryKey
+     * @param $path
+     */
+    public function addDirectory($directoryKey,$path){
+        bindtextdomain($directoryKey, realpath($path));
+        textdomain($directoryKey);
+        $this->_directory[$directoryKey] = $path;
+    }
+
+    /**
      * Gets the path for a domain
      */
     public function getDirectory()
@@ -280,14 +290,13 @@ class Gettext extends Adapter
         $this->_locale = $locale.($charset?('.'.$charset):'');
         $this->_category = $category;
         // Windowns
-        putenv("LC_ALL=" . $locale.$charset);
-        putenv("LC_ALL=" . $locale.$charset);
-        putenv("LC_MESSAGES=$locale");
-        setlocale(LC_MESSAGES, $locale);
-        putenv("LANGUAGE=$locale");
+        putenv("LC_ALL=" . $locale);
+        putenv("LC_MESSAGES=$this->_locale");
+        setlocale(LC_MESSAGES, $this->_locale);
+        putenv("LANGUAGE=$this->_locale");
         putenv("LANG=$locale");
         // Linux
-        setlocale(LC_ALL, $locale.$charset);
+        $s = setlocale(LC_ALL, $this->_locale);
         return $this->_locale;
     }
 
