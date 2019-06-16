@@ -16,7 +16,7 @@ class SimpleStorage {
 		$this->_options ['auth'] = '';
 		$this->_options ['index'] = 0;
 		$this->_filterOption ( $config );
-        $this->_redisServer = new RedisServer ( $this->_options ['host'], $this->_options ['port'] );
+        //$this->_redisServer = new RedisServer ( $this->_options ['host'], $this->_options ['port'] );
 
         //IMPORTANT:
         //如果使用php-redis库，在zRangeByScore使用参数withscores时，可能内存溢出，整个php进程的相关变量会莫名其妙出问题，例：
@@ -29,7 +29,7 @@ class SimpleStorage {
         // 采用php-redis时zRangeByScore相关的调用必须重写，传参不一样了
 
 
-        //$this->_redisServer = new \Redis();
+        $this->_redisServer = new \Redis();
         $this->_redisServer->connect($this->_options ['host'], $this->_options ['port']);
 		if ($this->_options ['auth']) {
 			$this->_redisServer->Auth ( $this->_options ['auth'] );
@@ -76,6 +76,22 @@ class SimpleStorage {
 		$value = $this->_serialize ( $value );
 		return $this->_redisServer->sAdd ( $key, $value );
 	}
+
+    public function getFromSet($key){
+        $result = $this->_redisServer->sMembers($key);
+        return $this->_unserialize($result);
+    }
+    public function scanSet($key,$limit=10,$match=''){
+	    $it = null;
+        $result = $this->_redisServer->sScan($key,$it,$match,$limit);
+        if($result){
+            foreach($result as $key=>&$value){
+                $value = $this->_unserialize($value);
+            }
+        }
+        return $result;
+    }
+
 	public function deleteFromSet($key,$value){
 		$value = $this->_serialize ( $value );
 		return $this->_redisServer->sRem($key, $value);
@@ -243,14 +259,15 @@ class SimpleStorage {
 	public function getFromSortedSetByScore($key, $min, $max, $withScores = false, $limit = null, $offset = null, $revert = false)
     {
 
-        $options = [];
+        $options = ['withscores'=>$withScores];
 	    if($limit!==null && $offset!==null){
-	        $options= [$offset,$limit];
+	        $options['limit']= [$offset,$limit];
         }
 		if (! $revert)
-			$result = $this->_redisServer->zRangeByScore ( $key, $min, $max, $withScores,$options);
+			//$result = $this->_redisServer->zRangeByScore ( $key, $min, $max, $withScores,$options);
+            $result = $this->_redisServer->zRangeByScore ( $key, $min, $max, $options);
 		else
-            $result = $this->_redisServer->zRevRangeByScore ( $key, $max,$min, $withScores,$options );
+            $result = $this->_redisServer->zRevRangeByScore ( $key, $max,$min, $options);
         $list = [];
 		if (! empty ( $result )) {
             $len = sizeof($result);
@@ -308,11 +325,13 @@ class SimpleStorage {
 	 * @return string
 	 */
 	protected function _serialize($data) {
-		if (is_numeric ( $data )) {
-			return ( string ) $data;
-		} else {
-			return serialize ( $data );
-		}
+	    return $data;
+//
+//		if (is_numeric ( $data )) {
+//			return ( string ) $data;
+//		} else {
+//			return serialize ( $data );
+//		}
 	}
 	/**
 	 * 反序列化
@@ -321,27 +340,28 @@ class SimpleStorage {
 	 * @return NULL unknown
 	 */
 	protected function _unserialize($data) {
-		if (is_null ( $data )||$this->_transacting) {
-			return null;
-		} else if (is_numeric ( $data )) {
-			if (strpos ( $data, '.' ) === false) {
-				$unserializedValue = ( integer ) $data;
-			} else {
-				$unserializedValue = ( float ) $data;
-			}
-			
-			if (( string ) $unserializedValue !== $data) {
-				$unserializedValue = $data;
-			}
-		} else {
-			try {
-				$unserializedValue = unserialize ( $data );
-			} catch ( Exception $e ) {
-				$unserializedValue = $data;
-			}
-		}
-		
-		return $unserializedValue;
+	    return $data;
+//		if (is_null ( $data )||$this->_transacting) {
+//			return null;
+//		} else if (is_numeric ( $data )) {
+//			if (strpos ( $data, '.' ) === false) {
+//				$unserializedValue = ( integer ) $data;
+//			} else {
+//				$unserializedValue = ( float ) $data;
+//			}
+//
+//			if (( string ) $unserializedValue !== $data) {
+//				$unserializedValue = $data;
+//			}
+//		} else {
+//			try {
+//				$unserializedValue = unserialize ( $data );
+//			} catch ( Exception $e ) {
+//				$unserializedValue = $data;
+//			}
+//		}
+//
+//		return $unserializedValue;
 	}
 	/**
 	 * 选项设置默认值

@@ -71,19 +71,17 @@ class Cache{
 // 			));
 // 			$ref = new \ReflectionClass('\\Phalcon\\Cache\\Backend\\'.$this->_config['slow']['engine']);
 // 			$slowEnd = $ref->newInstance($slowFront,$this->_config['slow']['option']);
-			
+
 			$fastFrond = new \Phalcon\Cache\Frontend\Data(array(
 				'lifetime'=>$this->_config['fast']['option']['lifetime']
 			));
 			$ref = new \ReflectionClass('\\Phalcon\\Cache\\Backend\\'.$this->_config['fast']['engine']);
-
 			$fastEnd = $ref->newInstance($fastFrond,$this->_config['fast']['option']);
 			$this->_cacheEngine = $fastEnd;
 // 			$this->_cacheEngine = new Multiple(array(
 // 				$fastEnd,$slowEnd
 // 			));
 		}
-		
 	}
 	/**
 	 * 
