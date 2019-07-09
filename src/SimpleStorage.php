@@ -325,13 +325,13 @@ class SimpleStorage {
 	 * @return string
 	 */
 	protected function _serialize($data) {
-	    return $data;
+//	    return $data;
 //
-//		if (is_numeric ( $data )) {
-//			return ( string ) $data;
-//		} else {
-//			return serialize ( $data );
-//		}
+		if (is_numeric ( $data )) {
+			return ( string ) $data;
+		} else {
+			return serialize ( $data );
+		}
 	}
 	/**
 	 * 反序列化
@@ -340,28 +340,28 @@ class SimpleStorage {
 	 * @return NULL unknown
 	 */
 	protected function _unserialize($data) {
-	    return $data;
-//		if (is_null ( $data )||$this->_transacting) {
-//			return null;
-//		} else if (is_numeric ( $data )) {
-//			if (strpos ( $data, '.' ) === false) {
-//				$unserializedValue = ( integer ) $data;
-//			} else {
-//				$unserializedValue = ( float ) $data;
-//			}
-//
-//			if (( string ) $unserializedValue !== $data) {
-//				$unserializedValue = $data;
-//			}
-//		} else {
-//			try {
-//				$unserializedValue = unserialize ( $data );
-//			} catch ( Exception $e ) {
-//				$unserializedValue = $data;
-//			}
-//		}
-//
-//		return $unserializedValue;
+	    //return $data;
+		if (is_null ( $data )||$this->_transacting) {
+			return null;
+		} else if (is_numeric ( $data )) {
+			if (strpos ( $data, '.' ) === false) {
+				$unserializedValue = ( integer ) $data;
+			} else {
+				$unserializedValue = ( float ) $data;
+			}
+
+			if (( string ) $unserializedValue !== $data) {
+				$unserializedValue = $data;
+			}
+		} else {
+			try {
+				$unserializedValue = unserialize ( $data );
+			} catch ( Exception $e ) {
+				$unserializedValue = $data;
+			}
+		}
+
+		return $unserializedValue;
 	}
 	/**
 	 * 选项设置默认值
