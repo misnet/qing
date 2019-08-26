@@ -451,4 +451,19 @@ class Utils{
             @mkdir($d,0755,true);
         }
     }
+
+    /**
+     * 生成GUID
+     * @return string
+     */
+    public static function guid($hyphen='-'){
+        mt_srand((double)microtime()*10000);
+        $charid = strtoupper(md5(uniqid(rand(), true)));
+        $uuid = substr($charid, 0, 8).$hyphen
+            .substr($charid, 8, 4).$hyphen
+            .substr($charid,12, 4).$hyphen
+            .substr($charid,16, 4).$hyphen
+            .substr($charid,20,12);
+        return $uuid;
+    }
 }
