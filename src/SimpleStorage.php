@@ -442,4 +442,10 @@ class SimpleStorage {
     public function countSet($key){
         return $this->_redisServer->sCard($key);
     }
+    public function close()
+    {
+        if($this->_redisServer){
+            $this->_redisServer->close();
+        }
+    }
 }
