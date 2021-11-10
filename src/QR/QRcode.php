@@ -55,8 +55,8 @@ namespace Qing\Lib\QR;
 	define('QRCAP_EC',           3);
 	
 	define('QR_CACHEABLE', true);                                                               // use cache - more disk reads but less CPU power, masks and format templates are stored there
-	define('QR_CACHE_DIR', QING_ROOT_PATH.DIRECTORY_SEPARATOR.'var'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR);  // used when QR_CACHEABLE === true
-	define('QR_LOG_DIR', QING_ROOT_PATH.DIRECTORY_SEPARATOR.'var'.DIRECTORY_SEPARATOR.'logs'.DIRECTORY_SEPARATOR);                                // default error logs dir
+	define('QR_CACHE_DIR', QING_TMP_PATH.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR);  // used when QR_CACHEABLE === true
+	define('QR_LOG_DIR', QING_TMP_PATH.DIRECTORY_SEPARATOR.'logs'.DIRECTORY_SEPARATOR);                                // default error logs dir
 	
 	define('QR_FIND_BEST_MASK', true);                                                          // if true, estimates best mask (spec. default, but extremally slow; set to false to significant performance boost but (propably) worst quality code
 	define('QR_FIND_FROM_RANDOM', false);                                                       // if false, checks all masks available, otherwise value tells count of masks need to be checked, mask id are got randomly
