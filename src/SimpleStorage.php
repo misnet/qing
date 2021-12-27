@@ -44,6 +44,7 @@ class SimpleStorage {
      */
 	public function selectDatabase($index){
 	    $this->_redisServer->Select($index);
+	    $this->_options['index'] = $index;
     }
 	public function get($key) {
 		$data = $this->_redisServer->get( $key );
