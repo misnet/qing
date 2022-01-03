@@ -2,7 +2,7 @@
 
 namespace Qing\Lib;
 
-class Exception extends \Phalcon\Exception {
+class Exception extends \Exception {
 	/**
 	 *
 	 * @var null Exception

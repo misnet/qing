@@ -18,15 +18,15 @@ class Application{
         self::$_domainNameAlias = $array;
     }
 	
-	public static function startup(ApplicationInterface $app,$di){
-		//$di     = \Phalcon\DI\FactoryDefault::getDefault();
-		$loader = new \Phalcon\Loader();
-		//如果用phalcon module ，下面两行要注释掉
-		$app->registerAutoloaders($loader,$di);
-		$app->registerServices($di);
-		
-		$app->registerRoutes($di);
-	}
+//	public static function startup(ApplicationInterface $app,$di){
+//		//$di     = \Phalcon\DI\FactoryDefault::getDefault();
+//		$loader = new \Phalcon\Autoload\Loader();
+//		//如果用phalcon module ，下面两行要注释掉
+//		$app->registerAutoloaders($loader,$di);
+//		$app->registerServices($di);
+//
+//		$app->registerRoutes($di);
+//	}
 	public static function setConfig($config){
 		self::$_config = $config;
 	}

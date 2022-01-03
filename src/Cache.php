@@ -1,33 +1,35 @@
 <?php
 namespace Qing\Lib;
-use Phalcon\Cache\Multiple;
+use Phalcon\Cache\Cache as PhalconCache;
+use Phalcon\Cache\AdapterFactory;
+use Phalcon\Storage\SerializerFactory;
 class Cache{
 	/**
      * 可用的缓存引擎
      * @var array 
      */
-    private static $_avaiableEngine = array('file','memcache','libmemcached','mongo','apc','xcache','redis');
+    private static $_avaiableEngine = array('stream','memory','libmemcached','apcu','redis');
     /**
      * 默认缓存引擎
      * @var string
      */
-    private static $_defaultEngine = 'file';
+    private static $_defaultEngine = 'stream';
     /**
      * 默认缓存生命期
      * @var integer
      */
     private $_lifetime = 172800;
-    /**
-     * 使用多层缓存系统
-     * @var boolean
-     */
-    private  $_useMutiLevels = true;
     private  $_config;
     /**
      * 
-     *  @var \Phalcon\Cache\BackendInterface
+     *  @var \Phalcon\Cache\Cache
      */
     private  $_cacheEngine;
+    /**
+     * @var
+     */
+    private $_option;
+    private $_adapterName = 'stream';
 	/**
 	 * 建立缓存对象
 	 * 
@@ -53,35 +55,20 @@ class Cache{
 	public function __construct($config=array()){
 		$config = $this->_checkAndInitConfig($config);
 		$this->_config = $config;
-		if(!isset($config['fast'])){
-			$this->_useMutiLevels = false;
-		}
-		if(!$this->_useMutiLevels){
-			$frontendAdapter = new \Phalcon\Cache\Frontend\Data(array(
-				'lifetime'=>$this->_config['slow']['option']['lifetime']
-			));
-			$ref = new \ReflectionClass('\\Phalcon\\Cache\\Backend\\'.$this->_config['slow']['engine']);
-			$s = $this->_config['slow']['option'];
-			//$this->_cacheEngine = new \Phalcon\Cache\Backend\File($frontendAdapter,$s);
-			$this->_cacheEngine = $ref->newInstance($frontendAdapter, $this->_config['slow']['option']);
-			
-		}else{
-// 			$slowFront = new \Phalcon\Cache\Frontend\Data(array(
-// 				'lifetime'=>$this->_config['slow']['option']['lifetime']
-// 			));
-// 			$ref = new \ReflectionClass('\\Phalcon\\Cache\\Backend\\'.$this->_config['slow']['engine']);
-// 			$slowEnd = $ref->newInstance($slowFront,$this->_config['slow']['option']);
+        $serializerFactory = new SerializerFactory();
+        $adapterFactory    = new AdapterFactory($serializerFactory);
 
-			$fastFrond = new \Phalcon\Cache\Frontend\Data(array(
-				'lifetime'=>$this->_config['fast']['option']['lifetime']
-			));
-			$ref = new \ReflectionClass('\\Phalcon\\Cache\\Backend\\'.$this->_config['fast']['engine']);
-			$fastEnd = $ref->newInstance($fastFrond,$this->_config['fast']['option']);
-			$this->_cacheEngine = $fastEnd;
-// 			$this->_cacheEngine = new Multiple(array(
-// 				$fastEnd,$slowEnd
-// 			));
-		}
+        if(!isset($config['fast'])){
+            $key = 'slow';
+        }else{
+            $key = 'fast';
+        }
+        $options =$this->_config[$key]['option'];
+        $options['defaultSerializer'] = 'php';
+        $this->_option = $options;
+        $this->_adapterName = $this->_config[$key]['engine'];
+        $adapter = $adapterFactory->newInstance($this->_config[$key]['engine'], $options);
+        $this->_cacheEngine = new PhalconCache($adapter);
 	}
 	/**
 	 * 
@@ -97,7 +84,7 @@ class Cache{
 	 */
 	private function _checkAndInitConfig($config){
 		if(!isset($config['slow'])){
-			throw new Exception('请指定slow选项');
+			throw new \Exception('请指定slow选项');
 		}
 		$config['slow'] = $this->_prepareEngineOption($config['slow']);
 		if(isset($config['fast'])){
@@ -117,7 +104,7 @@ class Cache{
 		$cacheBackend = isset($config['engine'])?$config['engine']:self::$_defaultEngine;
 		$cacheBackend = strtolower($cacheBackend);
 		$cacheBackend = in_array($cacheBackend,self::$_avaiableEngine)?$cacheBackend:self::$_defaultEngine;
-		$cacheBackend = ucfirst($cacheBackend);
+		$cacheBackend = strtolower($cacheBackend);
 		$config['engine'] = $cacheBackend;
 		if(!isset($config['option']['lifetime'])||!is_int($config['option']['lifetime'])||$config['option']['lifetime']<0){
 			$config['option']['lifetime'] = $this->_lifetime;
@@ -158,11 +145,16 @@ class Cache{
 	 * 保存缓存
 	 * @param string $keyName
 	 * @param mixed $data 要缓存的数据
-	 * @param integer $lifetime
+	 * @param integer $lifetime 未指定时使用配置文件指定的Lifetime，redis要永久存储则使用负数-1
 	 */
 	public function set($keyName,$data,$lifetime=null){
         $keyName = $this->_filterKeyName($keyName);
-		$this->_cacheEngine->save($keyName,$data,$lifetime);
+        if($lifetime<0 && strtolower($this->_adapterName)==='redis'){
+            $this->_cacheEngine->getAdapter()->setForever($keyName,$data);
+        }else{
+            $this->_cacheEngine->set($keyName,$data,$lifetime);
+        }
+
 	}
 	/**
 	 * 删除缓存
@@ -178,8 +170,11 @@ class Cache{
 	 */
 	public function queryKeys($key){
         $key = $this->_filterKeyName($key);
-	    $options = $this->_cacheEngine->getOptions();
-    	return $this->_cacheEngine->queryKeys($options['prefix'].$key);
+        $prefix = '';
+        if($this->_option['prefix']){
+            $prefix = $this->_option['prefix'];
+        }
+    	return $this->_cacheEngine->getKeys($prefix.$key);
 	}
 	/**
 	 * 删除以$prefix开头的缓存
@@ -189,7 +184,7 @@ class Cache{
 	    $prefix = $this->_filterKeyName($prefix);
 		$keys = $this->queryKeys($prefix);
 		if($keys){
-		    $options = $this->_cacheEngine->getOptions();
+		    $options = $this->_option;
 			foreach($keys as $key){
 				$noPrefixKey = str_replace($options['prefix'], '', $key);
 				$this->_cacheEngine->delete($noPrefixKey);
@@ -213,10 +208,13 @@ class Cache{
 		}
 		return $config;
 	}
+
+    /**
+     * 保存缓存的key名称规范，在windows平台也能正常
+     * @param $name 缓存key名
+     * @return array|mixed|string|string[]
+     */
 	private function _filterKeyName($name){
-        if($this->_config['slow']['engine']=='file' && stripos(PHP_OS, 'win')!==false){
-            $name = str_ireplace(':','__',$name);
-        }
-        return $name;
+        return str_ireplace(':','-',$name);
     }
 }

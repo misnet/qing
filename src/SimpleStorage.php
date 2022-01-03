@@ -367,11 +367,11 @@ class SimpleStorage {
 	/**
 	 * 选项设置默认值
 	 *
-	 * @param \Phalcon\Config|array $option        	
+	 * @param \Phalcon\Config\Config|array $option
 	 * @return Ambigous <multitype:, array, unknown>
 	 */
 	protected function _filterOption($option) {
-		if ($option instanceof \Phalcon\Config) {
+		if ($option instanceof \Phalcon\Config\Config) {
 			$option = $option->toArray ();
 		} elseif (! is_array ( $option )) {
 			$option = array ();

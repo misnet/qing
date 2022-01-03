@@ -22,7 +22,7 @@ class JobEvent implements \Serializable{
      * 执行动作
      * 当_data['object']是字串时，系统以静态方法执行_data['action']方法
      * 当_data['object']是对象时，系统直接调用_data['action']方法
-     * @param $di \Phalcon\DiInterface
+     * @param $di \Phalcon\Di\DiInterface
      * @throws Qing\Lib\Exception
      */
     public function doJob($di){
