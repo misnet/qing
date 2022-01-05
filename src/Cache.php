@@ -174,7 +174,7 @@ class Cache{
         if($this->_option['prefix']){
             $prefix = $this->_option['prefix'];
         }
-    	return $this->_cacheEngine->getKeys($prefix.$key);
+    	return $this->_cacheEngine->getAdapter()->getKeys($prefix.$key);
 	}
 	/**
 	 * 删除以$prefix开头的缓存
