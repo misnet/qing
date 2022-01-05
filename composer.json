@@ -6,7 +6,7 @@
     "require":{
         "php":">=5.6"
     },
-
+    "version": "1.1.0",
     "autoload": {
         "psr-4": {
             "Qing\\Lib\\": "src"
