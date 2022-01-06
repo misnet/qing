@@ -5,7 +5,7 @@ namespace Qing\Lib;
 class SimpleStorage {
 	/**
 	 *
-	 * @var \Qing\Lib\RedisServer
+	 * @var \Redis
 	 */
 	private $_redisServer;
 	private $_options;
@@ -448,5 +448,12 @@ class SimpleStorage {
         if($this->_redisServer){
             $this->_redisServer->close();
         }
+    }
+    /**
+     * 返回storage驱动对象
+     * @return \Redis
+     */
+    public function getStorageDriver(){
+        return $this->_redisServer;
     }
 }

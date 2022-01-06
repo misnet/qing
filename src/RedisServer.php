@@ -6,6 +6,7 @@ use \Qing\Lib\CacheException;
  * RedisServer allows you to work with Redis storage in PHP
  * Redis version compatibility: 2.6.9 (and below)
  * You can send custom command using send_command() method.
+ * @deprecated
  */
 class RedisServer {
     const WITHSCORES = 'WITHSCORES';
