@@ -11,7 +11,11 @@ class SimpleStorage {
 	private $_options;
 	private $_transacting = 0;
 	public function __construct($config) {
-		$this->_options ['host'] = '127.0.0.1';
+        if($config instanceof \Redis){
+            $this->_redisServer = $config;
+            return;
+        }
+        $this->_options ['host'] = '127.0.0.1';
 		$this->_options ['port'] = 6391;
 		$this->_options ['auth'] = '';
 		$this->_options ['index'] = 0;
